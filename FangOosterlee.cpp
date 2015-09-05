@@ -5,18 +5,32 @@ FangOosterlee::FangOosterlee(int k_, int h_) {
 	h=h_; //x discretions
 	//M_PI=3.14159265358979323846;
 }
-std::map<std::string, std::vector<double> > FangOosterlee::computeDistribution(cf characteristicFunction, std::map<std::string, double> parameters, double xmin, double xmax) {
+void extendedDist(cf chrF, Complex u, std::map<std::string, double> &parameters, double &f, double xmin, double cp){
+	//f=chrF(u, parameters).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+}
+std::map<std::string, std::vector<double> > FangOosterlee::computeDistribution(cf characteristicFunction, std::map<std::string, double> &parameters, double xmin, double xmax) {
 	double xRange=xmax-xmin;
 	double du=M_PI/xRange;
 	double dx=xRange/(double)(h-1);
 	double cp=2.0/xRange;
 	std::vector<double> f=std::vector<double> (k);
 	std::vector<double> y=std::vector<double> (h);
+
 	std::vector<double> x=std::vector<double> (h);
+	std::vector<std::thread> thrd=std::vector<std::thread> (k);
+	//parameters["cp"]=cp;
+	//parameters["xmin"]=xmin;
 	for(int j=0; j<k; j++){
 		Complex u=Complex(0, du*j);
-		f[j]=characteristicFunction(u, parameters).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+		thrd[j]=std::thread(extendedDist, characteristicFunction, u,  std::ref(parameters), std::ref(f[j]),  xmin, cp);
+	//	f[j]=characteristicFunction(u, parameters).multiply(u.multiply(-xmin).exp()).getReal()*cp;
 	}
+	for(int j=0; j<k; j++){
+			thrd[j].join();
+	}
+	//for(auto& t : thrd){
+		//t.join();
+	//}
 	f[0]=.5*f[0];
 	double exloss=0; //make these public later
 	double vloss=0;
@@ -34,4 +48,3 @@ std::map<std::string, std::vector<double> > FangOosterlee::computeDistribution(c
 	distribution["y"]=y;
 	return distribution;
 }
-

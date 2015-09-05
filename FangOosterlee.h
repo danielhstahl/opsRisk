@@ -6,9 +6,10 @@
 #include <vector>
 #include <map>
 #include <iostream> //debugging
+#include <thread>
+typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
+class FangOosterlee {
 
-class FangOosterlee { 
-	typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
 	private:
 		int k;
 		int h;
@@ -16,7 +17,7 @@ class FangOosterlee {
 	public:
 		FangOosterlee(int, int);
 		//std::map<std::string, std::vector<double> > computeDistribution(ICharacteristicFunction*, double, double);
-		std::map<std::string, std::vector<double> > computeDistribution(cf, std::map<std::string, double>, double, double);
+		std::map<std::string, std::vector<double> > computeDistribution(cf, std::map<std::string, double>&, double, double);
 
 };
 #endif

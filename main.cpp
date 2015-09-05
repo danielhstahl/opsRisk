@@ -4,7 +4,7 @@
 #include "RungeKutta.h"
 #include "Complex.h"
 #include <cmath>
-#include <fstream> 
+#include <fstream>
 #include <ctime>
 //#define pi=3.14159265
 Complex GaussCF(Complex u, std::map<std::string, double> params){
@@ -25,7 +25,7 @@ std::vector<Complex> DuffieODE(double t, std::vector<Complex> initialValues, std
 	double a=params["a"];
 	//Complex uBeta=cmplParams["u"].add(initialValues[0].multiply(params["delta"])).multiply(Complex(0, -1));
 	Complex uBeta=cmplParams["u"].add(initialValues[0].multiply(params["delta"]));
-	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(stableCF(uBeta, params).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(uBeta));
+	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(stableCF(uBeta, params).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
 	vls[1]=initialValues[0].multiply(params["b"]*a);
 	return vls;
 }
@@ -50,15 +50,15 @@ int main(){
 	params["delta"]=.5/(params["mu"]*params["lambda"]);
 	params["a"]=.4;
 	params["sigma"]=.4;
-	params["b"]=1-params["delta"];
+	params["b"]=1-params["delta"]*params["mu"]*params["lambda"];
 	params["t"]=1;
-	params["numODE"]=64;
+	params["numODE"]=100000;
 	params["v0"]=1;
 	double xmin=-100;
 	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
 	//double xmax=(params["mu"]+35*params["c"]);
-	
-	
+
+
 	clock_t t;
 	t = clock();
 	std::map<std::string, std::vector<double> > results=invert.computeDistribution(distToInvert, params, xmin, xmax);
@@ -71,9 +71,5 @@ int main(){
 		outputCSV<<""<<results["x"][i]<<", "<<results["y"][i]<<std::endl;
 	}
 	outputCSV.close();
-	
-	//int n=results["y"].size();
-	//for(int i=0; i<n; i++){
-		//std::cout<<results["x"][i]<<": "<<results["y"][i]<<std::endl;
-	//}	
+
 }

@@ -4,24 +4,9 @@ RungeKutta::RungeKutta(cf funcToSolve_, double t_, std::vector<Complex> initialV
 	t=t_;
 	initialValues=initialValues_;
 	numSteps=numSteps_;
-	
-	//init(funcToSolve_, t_,initialValues_, numSteps_, std::map<std::string, double>(), std::map<std::string, Complex>()); 
+
 }
-/*RungeKutta::RungeKutta(cf funcToSolve_, double t_, std::vector<Complex> initialValues_, int numSteps_, std::map<std::string, double> params_){
-	init(funcToSolve_, t_,initialValues_, numSteps_, params_, std::map<std::string, Complex>()); 
-}
-RungeKutta::RungeKutta(cf funcToSolve_, double t_, std::vector<Complex> initialValues_, int numSteps_, std::map<std::string, Complex> params_){
-	init(funcToSolve_, t_,initialValues_, numSteps_, std::map<std::string, double>(), params_); 
-}
-void RungeKutta::init(cf funcToSolve_, double t_, std::vector<Complex> initialValues_, int numSteps_, std::map<std::string, double> params_, std::map<std::string, Complex> cmplParams_){
-	funcToSolve=funcToSolve_;
-	t=t_;
-	initialValues=initialValues_;
-	numSteps=numSteps_;
-	//params=params_;
-	//cmplParams=cmplParams_;
-}*/
-std::vector<Complex> RungeKutta::compute(std::map<std::string, double> params, std::map<std::string, Complex> cmplParams){
+std::vector<Complex> RungeKutta::compute(std::map<std::string, double> &params, std::map<std::string, Complex> &cmplParams){
 	double h=t/numSteps;
 	double hlfh=h*.5;
 	double sixthh=h/6.0;
