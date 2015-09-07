@@ -10,9 +10,7 @@
 #include <functional>
 //typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
 
-
 class FangOosterlee {
-
 	private:
 		int k;
 		int h;
@@ -21,8 +19,9 @@ class FangOosterlee {
 		FangOosterlee(int, int);
 		//template< typename FN, typename... ARGS>
 		//std::map<std::string, std::vector<double> > computeDistribution(double, double, FN&& fn, ARGS&&... args);
+
 		template< typename FN, typename... ARGS>
-		std::map<std::string, std::vector<double> > computeDistribution(double xmin, double xmax, FN&& fn, ARGS&&... args ) {
+		std::map<std::string, std::vector<double> > computeDistribution(double xmin, double xmax, FN&& fn, ARGS&&... args) {
 			double xRange=xmax-xmin;
 			double du=M_PI/xRange;
 			double dx=xRange/(double)(h-1);
@@ -32,13 +31,23 @@ class FangOosterlee {
 
 			std::vector<double> x=std::vector<double> (h);
 			std::vector<std::thread> thrd=std::vector<std::thread> (k);
-			//parameters["cp"]=cp;
-			//parameters["xmin"]=xmin;
-			for(int j=0; j<k; j++){
-				Complex u=Complex(0, du*j);
-				//thrd[j]=std::thread(extendedDist, characteristicFunction, u,  std::ref(parameters), std::ref(f[j]),  xmin, cp);
-				f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+
+			#pragma omp parallel//multithread using openmp
+			{
+				#pragma omp for //multithread using openmp
+				for(int j=0; j<k; j++){
+					Complex u=Complex(0, du*j);
+
+					//thrd[j]=std::thread([&]{ //lambda function...this is cool!
+					//	f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+					//});
+					f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+
+				}
 			}
+		//	for(int j=0; j<k;j++){
+		//		thrd[j].join();
+			//}
 			f[0]=.5*f[0];
 			double exloss=0; //make these public later
 			double vloss=0;
