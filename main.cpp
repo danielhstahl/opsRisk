@@ -6,7 +6,7 @@
 #include <cmath>
 #include <fstream>
 #include <ctime>
-//#define pi=3.14159265
+#include <chrono> //for accurate multithreading time using std::chrono
 Complex GaussCF(Complex u, std::map<std::string, double> params){
 	return u.multiply(params["mu"]).add(u.multiply(u).multiply(params["sigma"]*params["sigma"]*.5)).exp();
 }
@@ -59,13 +59,11 @@ int main(){
 	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
 	//double xmax=(params["mu"]+35*params["c"]);
 
-
-	clock_t t;
-	t = clock();
-	//std::map<std::string, std::vector<double> > results=invert.computeDistribution(distToInvert, params, xmin, xmax);
+	auto start = std::chrono::system_clock::now();
 	std::map<std::string, std::vector<double> > results=invert.computeDistribution(xmin, xmax, distToInvert, params);
-	t = clock() - t;
-	std::cout<<"Time it took: "<<(float)t/CLOCKS_PER_SEC<<std::endl;
+	auto end=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-start);
+
+	std::cout<<"Time it took: "<<end.count()/1000.0<<std::endl;
 	std::ofstream outputCSV;
 	outputCSV.open("stable.csv");
 	outputCSV <<"x, y"<<std::endl;
