@@ -7,7 +7,10 @@
 #include <map>
 #include <iostream> //debugging
 #include <thread>
-typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
+#include <functional>
+//typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
+
+
 class FangOosterlee {
 
 	private:
@@ -16,8 +19,42 @@ class FangOosterlee {
 		//double M_PI;
 	public:
 		FangOosterlee(int, int);
-		//std::map<std::string, std::vector<double> > computeDistribution(ICharacteristicFunction*, double, double);
-		std::map<std::string, std::vector<double> > computeDistribution(cf, std::map<std::string, double>&, double, double);
+		//template< typename FN, typename... ARGS>
+		//std::map<std::string, std::vector<double> > computeDistribution(double, double, FN&& fn, ARGS&&... args);
+		template< typename FN, typename... ARGS>
+		std::map<std::string, std::vector<double> > computeDistribution(double xmin, double xmax, FN&& fn, ARGS&&... args ) {
+			double xRange=xmax-xmin;
+			double du=M_PI/xRange;
+			double dx=xRange/(double)(h-1);
+			double cp=2.0/xRange;
+			std::vector<double> f=std::vector<double> (k);
+			std::vector<double> y=std::vector<double> (h);
 
+			std::vector<double> x=std::vector<double> (h);
+			std::vector<std::thread> thrd=std::vector<std::thread> (k);
+			//parameters["cp"]=cp;
+			//parameters["xmin"]=xmin;
+			for(int j=0; j<k; j++){
+				Complex u=Complex(0, du*j);
+				//thrd[j]=std::thread(extendedDist, characteristicFunction, u,  std::ref(parameters), std::ref(f[j]),  xmin, cp);
+				f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
+			}
+			f[0]=.5*f[0];
+			double exloss=0; //make these public later
+			double vloss=0;
+			for(int i=0;  i<h; i++){
+				y[i]=0;
+				x[i]=xmin+dx*i;
+				for(int j=0; j<k; j++){
+					y[i]=y[i]+f[j]*std::cos(du*j*dx*i);
+				}
+				vloss=vloss+y[i]*i*dx*dx*i;
+				exloss=exloss+y[i]*i*dx;
+			}
+			std::map<std::string, std::vector<double> > distribution;
+			distribution["x"]=x;
+			distribution["y"]=y;
+			return distribution;
+		}
 };
 #endif

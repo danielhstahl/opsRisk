@@ -47,12 +47,13 @@ int main(){
 	params["alpha"]=1.1;
 	params["beta"]=1;
 	params["lambda"]=100;
-	params["delta"]=.5/(params["mu"]*params["lambda"]);
+	double rho=.5;
+	params["delta"]=rho/(params["mu"]*params["lambda"]);
 	params["a"]=.4;
 	params["sigma"]=.4;
-	params["b"]=1-params["delta"]*params["mu"]*params["lambda"];
+	params["b"]=1-rho;
 	params["t"]=1;
-	params["numODE"]=100000;
+	params["numODE"]=128;
 	params["v0"]=1;
 	double xmin=-100;
 	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
@@ -61,11 +62,12 @@ int main(){
 
 	clock_t t;
 	t = clock();
-	std::map<std::string, std::vector<double> > results=invert.computeDistribution(distToInvert, params, xmin, xmax);
+	//std::map<std::string, std::vector<double> > results=invert.computeDistribution(distToInvert, params, xmin, xmax);
+	std::map<std::string, std::vector<double> > results=invert.computeDistribution(xmin, xmax, distToInvert, params);
 	t = clock() - t;
 	std::cout<<"Time it took: "<<(float)t/CLOCKS_PER_SEC<<std::endl;
 	std::ofstream outputCSV;
-	outputCSV.open("values.csv");
+	outputCSV.open("stable.csv");
 	outputCSV <<"x, y"<<std::endl;
 	for(int i=0; i<1024; i++){
 		outputCSV<<""<<results["x"][i]<<", "<<results["y"][i]<<std::endl;
