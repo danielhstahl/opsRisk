@@ -6,7 +6,6 @@
 #include <vector>
 #include <map>
 #include <iostream> //debugging
-#include <thread>
 #include <functional>
 //typedef Complex (*cf)(Complex, std::map<std::string, double>); //defines cf as a pointer to a function which takes complex and outputs complex as arguments...as of now all arguments must be doubles...
 
@@ -14,12 +13,15 @@ class FangOosterlee {
 	private:
 		int k;
 		int h;
+		double exloss;
+		double vloss;
 		//double M_PI;
 	public:
 		FangOosterlee(int, int);
 		//template< typename FN, typename... ARGS>
 		//std::map<std::string, std::vector<double> > computeDistribution(double, double, FN&& fn, ARGS&&... args);
-
+		double getEL();
+		double getVariance();
 		template< typename FN, typename... ARGS>
 		std::map<std::string, std::vector<double> > computeDistribution(double xmin, double xmax, FN&& fn, ARGS&&... args) {
 			double xRange=xmax-xmin;
@@ -30,7 +32,7 @@ class FangOosterlee {
 			std::vector<double> y=std::vector<double> (h);
 
 			std::vector<double> x=std::vector<double> (h);
-			std::vector<std::thread> thrd=std::vector<std::thread> (k);
+			std::vector<double> VaR=std::vector<double> (h);
 
 			#pragma omp parallel//multithread using openmp
 			{
@@ -38,19 +40,14 @@ class FangOosterlee {
 				for(int j=0; j<k; j++){
 					Complex u=Complex(0, du*j);
 
-					//thrd[j]=std::thread([&]{ //lambda function...this is cool!
-					//	f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
-					//});
 					f[j]=fn(u, args...).multiply(u.multiply(-xmin).exp()).getReal()*cp;
 
 				}
 			}
-		//	for(int j=0; j<k;j++){
-		//		thrd[j].join();
-			//}
 			f[0]=.5*f[0];
-			double exloss=0; //make these public later
-			double vloss=0;
+			exloss=0;
+			vloss=0;
+			double cdf=0;
 			for(int i=0;  i<h; i++){
 				y[i]=0;
 				x[i]=xmin+dx*i;
@@ -58,11 +55,14 @@ class FangOosterlee {
 					y[i]=y[i]+f[j]*std::cos(du*j*dx*i);
 				}
 				vloss=vloss+y[i]*i*dx*dx*i;
-				exloss=exloss+y[i]*i*dx;
+				exloss=exloss+y[i]*(xmin+i*dx)*dx;
+				cdf=cdf+dx*y[i];
+				VaR[i]=cdf;
 			}
 			std::map<std::string, std::vector<double> > distribution;
 			distribution["x"]=x;
 			distribution["y"]=y;
+			distribution["VaR"]=VaR;
 			return distribution;
 		}
 };

@@ -40,14 +40,15 @@ Complex distToInvert(Complex u, std::map<std::string, double> params){
 	return vls[0].multiply(params["v0"]).add(vls[1]).exp();
 }
 int main(){
-	FangOosterlee invert(256, 1024);
+	int xNum=4096;
+	FangOosterlee invert(512, xNum);
 	std::map<std::string, double> params; //im not a huge fan of this but it works
 	params["mu"]=1300;
 	params["c"]=100;
 	params["alpha"]=1.1;
 	params["beta"]=1;
 	params["lambda"]=100;
-	double rho=.5;
+	double rho=.9;
 	params["delta"]=rho/(params["mu"]*params["lambda"]);
 	params["a"]=.4;
 	params["sigma"]=.4;
@@ -56,7 +57,7 @@ int main(){
 	params["numODE"]=128;
 	params["v0"]=1;
 	double xmin=-100;
-	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
+	double xmax=params["lambda"]*(params["mu"]+1000*params["c"]);
 	//double xmax=(params["mu"]+35*params["c"]);
 
 	auto start = std::chrono::system_clock::now();
@@ -65,10 +66,10 @@ int main(){
 
 	std::cout<<"Time it took: "<<end.count()/1000.0<<std::endl;
 	std::ofstream outputCSV;
-	outputCSV.open("stable.csv");
-	outputCSV <<"x, y"<<std::endl;
-	for(int i=0; i<1024; i++){
-		outputCSV<<""<<results["x"][i]<<", "<<results["y"][i]<<std::endl;
+	outputCSV.open("VaR9.csv");
+	outputCSV <<"x, y, VaR"<<std::endl;
+	for(int i=0; i<xNum; i++){
+		outputCSV<<""<<results["x"][i]<<", "<<results["y"][i]<<", "<<results["VaR"][i]<<std::endl;
 	}
 	outputCSV.close();
 

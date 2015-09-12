@@ -11,20 +11,20 @@ class Complex {
 	public:
 		Complex();
 		Complex(double, double);
-		Complex multiply(double, double);
-		Complex multiply(Complex);
-		Complex multiply(double);
+		Complex multiply(double, double) const;
+		Complex multiply(Complex) const;
+		Complex multiply(double) const;
 		Complex exp();
 		Complex log();
-		Complex add(Complex);
-		Complex add(double);
-		Complex subtract(Complex);
-		Complex subtract(double);
-		Complex power(double);
+		Complex add(Complex) const;
+		Complex add(double) const;
+		Complex subtract(Complex) const;
+		Complex subtract(double) const;
+		Complex power(double) const;
 		double getReal();
 		double getIm();
-		Complex divide(Complex);
-		Complex divide(double);
+		Complex divide(Complex) const;
+		Complex divide(double) const;
 };
 
 #endif

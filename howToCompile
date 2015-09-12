@@ -1,4 +1,10 @@
-compile:
+g++ compile:
 g++ -std=c++11 -pthread -O3 main.cpp Complex.cpp FangOosterlee.cpp RungeKutta.cpp -o opsRisk -fopenmp
 run:
 ./opsRisk
+
+Visual studio
+compile:
+cl /EHsc /Ox /openmp main.cpp Complex.cpp FangOosterlee.cpp RungeKutta.cpp
+run: 
+main
