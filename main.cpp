@@ -7,42 +7,43 @@
 #include <fstream>
 #include <ctime>
 #include <chrono> //for accurate multithreading time using std::chrono
-Complex GaussCF(Complex u, std::map<std::string, double> params){
+Complex GaussCF(Complex u, std::unordered_map<std::string, double> params){
 	return u.multiply(params["mu"]).add(u.multiply(u).multiply(params["sigma"]*params["sigma"]*.5)).exp();
 }
 
-Complex stableCF(Complex u, std::map<std::string, double> params){
-	double alpha=params["alpha"];
+Complex stableCF(Complex u, double alpha, double mu, double beta, double c){
+	//double alpha=params["alpha"];
 	double phi=tan(alpha*.5*M_PI);
 	Complex uC=u.multiply(Complex(0, -1));
-	return u.multiply(params["mu"]).subtract(uC.multiply(params["c"]).power(alpha).multiply(Complex(1, -params["beta"]*phi))).exp();
+	return u.multiply(mu).subtract(uC.multiply(c).power(alpha).multiply(Complex(1, -beta*phi))).exp();
 }
-std::vector<Complex> DuffieODE(double t, std::vector<Complex> initialValues, std::map<std::string, double> params, std::map<std::string, Complex> cmplParams){
+std::vector<Complex> DuffieODE(double t, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double b, double alpha, double mu, double beta, double c, Complex &u){
 	std::vector<Complex> vls(2);
-	double sig=params["sigma"];
-	sig=sig*sig*.5;
-	double lambda=params["lambda"];
-	double a=params["a"];
+	//double sig=params["sigma"];
+	double sig=sigma*sigma*.5;
+	//double lambda=params["lambda"];
+	//double a=params["a"];
 	//Complex uBeta=cmplParams["u"].add(initialValues[0].multiply(params["delta"])).multiply(Complex(0, -1));
-	Complex uBeta=cmplParams["u"].add(initialValues[0].multiply(params["delta"]));
-	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(stableCF(uBeta, params).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
-	vls[1]=initialValues[0].multiply(params["b"]*a);
+	Complex uBeta=u.add(initialValues[0].multiply(delta));
+	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(stableCF(uBeta, alpha, mu, beta, c).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
+	vls[1]=initialValues[0].multiply(b*a);
 	return vls;
 }
-Complex distToInvert(Complex u, std::map<std::string, double> params){
+Complex distToInvert(Complex u, std::unordered_map<std::string, double> params){
 	std::vector<Complex> inits(2); //fortunately these will never change...
 	inits[0]=Complex(0, 0);
 	inits[1]=Complex(0, 0);
 	std::map<std::string, Complex> cmplParam;
-	cmplParam["u"]=u;
-	RungeKutta rg(DuffieODE, params["t"], inits, (int)params["numODE"]);
-	std::vector<Complex> vls=rg.compute(params, cmplParam);
+	//cmplParam["u"]=u;
+	RungeKutta rg(params["t"], (int)params["numODE"]);
+	//RungeKutta rg(DuffieODE, params["t"], inits, (int)params["numODE"]);
+	std::vector<Complex> vls=rg.compute(DuffieODE, inits, params["sigma"], params["lambda"], params["a"], params["delta"], params["b"], params["alpha"], params["mu"], params["beta"], params["c"],  u);
 	return vls[0].multiply(params["v0"]).add(vls[1]).exp();
 }
 int main(){
 	int xNum=4096;
 	FangOosterlee invert(512, xNum);
-	std::map<std::string, double> params; //im not a huge fan of this but it works
+	std::unordered_map<std::string, double> params; //im not a huge fan of this but it works
 	params["mu"]=1300;
 	params["c"]=100;
 	params["alpha"]=1.1;
@@ -57,7 +58,7 @@ int main(){
 	params["numODE"]=128;
 	params["v0"]=1;
 	double xmin=-100;
-	double xmax=params["lambda"]*(params["mu"]+1000*params["c"]);
+	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
 	//double xmax=(params["mu"]+35*params["c"]);
 
 	auto start = std::chrono::system_clock::now();

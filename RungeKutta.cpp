@@ -1,12 +1,12 @@
 #include "RungeKutta.h"
-RungeKutta::RungeKutta(cf funcToSolve_, double t_, std::vector<Complex> initialValues_, int numSteps_){
-	funcToSolve=funcToSolve_;
+RungeKutta::RungeKutta(double t_, int numSteps_){
+	//funcToSolve=funcToSolve_;
 	t=t_;
-	initialValues=initialValues_;
+	//initialValues=initialValues_;
 	numSteps=numSteps_;
 
 }
-std::vector<Complex> RungeKutta::compute(std::map<std::string, double> &params, std::map<std::string, Complex> &cmplParams){
+/*std::vector<Complex> RungeKutta::compute(std::unordered_map<std::string, double> &params, std::unordered_map<std::string, Complex> &cmplParams){
 	double h=t/numSteps;
 	double hlfh=h*.5;
 	double sixthh=h/6.0;
@@ -31,4 +31,4 @@ std::vector<Complex> RungeKutta::compute(std::map<std::string, double> &params, 
 		}
 	}
 	return initialValues;
-}
+}*/
