@@ -1,3 +1,4 @@
 *.obj
 opsRisk 
 *.csv
+*.o
