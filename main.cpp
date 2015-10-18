@@ -12,18 +12,13 @@ Complex GaussCF(Complex u, std::unordered_map<std::string, double> params){
 }
 
 Complex stableCF(Complex &u, double alpha, double mu, double beta, double c){
-	//double alpha=params["alpha"];
 	double phi=tan(alpha*.5*M_PI);
 	Complex uC=u.multiply(Complex(0, -1));
 	return u.multiply(mu).subtract(uC.multiply(c).power(alpha).multiply(Complex(1, -beta*phi))).exp();
 }
 std::vector<Complex> DuffieODE(double t, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double b, double alpha, double mu, double beta, double c, Complex &u){
 	std::vector<Complex> vls(2);
-	//double sig=params["sigma"];
 	double sig=sigma*sigma*.5;
-	//double lambda=params["lambda"];
-	//double a=params["a"];
-	//Complex uBeta=cmplParams["u"].add(initialValues[0].multiply(params["delta"])).multiply(Complex(0, -1));
 	Complex uBeta=u.add(initialValues[0].multiply(delta));
 	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(stableCF(uBeta, alpha, mu, beta, c).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
 	vls[1]=initialValues[0].multiply(b*a);
@@ -53,7 +48,6 @@ int main(){
 	params["v0"]=1;
 	double xmin=-100;
 	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
-	//double xmax=(params["mu"]+35*params["c"]);
 	std::vector<Complex> inits(2);
 	inits[0]=Complex(0, 0);
 	inits[1]=Complex(0, 0);
