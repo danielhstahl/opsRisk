@@ -1,6 +1,8 @@
 LDFLAGS=-L ../Complex -lComplex -L ../FangOosterlee -lFangOosterlee -L ../RungeKutta -lRungeKutta
 INCLUDES=-I ../Complex -I ../RungeKutta -I ../FangOosterlee
-opsRisk:
-	g++ -std=c++11 -O3  main.cpp  $(LDFLAGS) $(INCLUDES) -o opsRisk -fopenmp
+opsRisk: main.o
+	g++ -std=c++11 -O3  main.o  $(LDFLAGS) $(INCLUDES) -o opsRisk -fopenmp
+main.o: main.cpp 
+	g++ -std=c++11 -O3  -c main.cpp $(LDFLAGS) $(INCLUDES) -fopenmp
 clean:
-	     \rm *.o *~ p1
+	     -rm *.o marketRisk

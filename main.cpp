@@ -11,7 +11,7 @@ Complex GaussCF(Complex u, std::unordered_map<std::string, double> params){
 	return u.multiply(params["mu"]).add(u.multiply(u).multiply(params["sigma"]*params["sigma"]*.5)).exp();
 }
 
-Complex stableCF(Complex u, double alpha, double mu, double beta, double c){
+Complex stableCF(Complex &u, double alpha, double mu, double beta, double c){
 	//double alpha=params["alpha"];
 	double phi=tan(alpha*.5*M_PI);
 	Complex uC=u.multiply(Complex(0, -1));
@@ -29,14 +29,8 @@ std::vector<Complex> DuffieODE(double t, std::vector<Complex> &initialValues, do
 	vls[1]=initialValues[0].multiply(b*a);
 	return vls;
 }
-Complex distToInvert(Complex u, std::unordered_map<std::string, double> params){
-	std::vector<Complex> inits(2); //fortunately these will never change...
-	inits[0]=Complex(0, 0);
-	inits[1]=Complex(0, 0);
-	std::map<std::string, Complex> cmplParam;
-	//cmplParam["u"]=u;
+Complex distToInvert(Complex &u, std::unordered_map<std::string, double> &params, std::vector<Complex> &inits){
 	RungeKutta rg(params["t"], (int)params["numODE"]);
-	//RungeKutta rg(DuffieODE, params["t"], inits, (int)params["numODE"]);
 	std::vector<Complex> vls=rg.compute(DuffieODE, inits, params["sigma"], params["lambda"], params["a"], params["delta"], params["b"], params["alpha"], params["mu"], params["beta"], params["c"],  u);
 	return vls[0].multiply(params["v0"]).add(vls[1]).exp();
 }
@@ -60,9 +54,11 @@ int main(){
 	double xmin=-100;
 	double xmax=params["lambda"]*(params["mu"]+35*params["c"]);
 	//double xmax=(params["mu"]+35*params["c"]);
-
+	std::vector<Complex> inits(2);
+	inits[0]=Complex(0, 0);
+	inits[1]=Complex(0, 0);
 	auto start = std::chrono::system_clock::now();
-	std::map<std::string, std::vector<double> > results=invert.computeDistribution(xmin, xmax, distToInvert, params);
+	std::unordered_map<std::string, std::vector<double> > results=invert.computeDistribution(xmin, xmax, [&](Complex &u, std::unordered_map<std::string, double> &params){return distToInvert(u, params, inits);}, params);
 	auto end=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()-start);
 
 	std::cout<<"Time it took: "<<end.count()/1000.0<<std::endl;
