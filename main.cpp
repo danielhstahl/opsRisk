@@ -8,7 +8,7 @@
 #include <chrono> //for accurate multithreading time using std::chrono
 #include "document.h" //rapidjson
 #include "writer.h" //rapidjson
-#include "stringbuffer.h" //rapidjson
+#include "stringbuffer.h" //rapidjson 
 Complex GaussCF(Complex u, std::unordered_map<std::string, double> params){
 	return u.multiply(params["mu"]).add(u.multiply(u).multiply(params["sigma"]*params["sigma"]*.5)).exp();
 }
