@@ -22,7 +22,7 @@ Complex gammaCF(Complex &u, double a, double b){
 Complex inverseGaussianCF(Complex &u, double mu, double lambda){
 	return exp((lambda/mu)*(1-sqrt(1-(2*mu*mu*u)/lambda)));
 }
-template<typename CF>
+/*template<typename CF>
 std::vector<Complex> DuffieODE(Complex &u, CF &cf, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
 	std::vector<Complex> vls(2);
 	double sig=sigma*sigma*.5;
@@ -31,12 +31,22 @@ std::vector<Complex> DuffieODE(Complex &u, CF &cf, std::vector<Complex> &initial
 	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(cf(uBeta).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
 	vls[1]=initialValues[0].multiply(b*a);
 	return vls;
+}*/
+template<typename CF>
+std::vector<Complex> DuffieODE(Complex &u, CF &cf, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double k){ //double alpha, double mu, double beta, double c,
+	std::vector<Complex> vls(2);
+	double sig=sigma*sigma*.5;
+	Complex uBeta=u.add(initialValues[0].multiply(delta));
+	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(cf(uBeta).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a*(k+1.0)));
+	vls[1]=initialValues[0].multiply(a);
+	return vls;
 }
 template<typename CF>
 Complex distToInvert(Complex &u, std::unordered_map<std::string, double> &params, std::vector<Complex> &inits, const CF &cf){
 	RungeKutta rg(params["t"], (int)params["numODE"]);
 	std::vector<Complex> vls=rg.compute([&](double t, std::vector<Complex> &x){
-		return DuffieODE(u, cf, x, params["sigma"], params["lambda"], params["a"], params["delta"], params["b"]);
+		//return DuffieODE(u, cf, x, params["sigma"], params["lambda"], params["a"], params["delta"], params["b"]);
+		return DuffieODE(u, cf, x, params["sigma"], params["lambda"], params["a"], params["delta"], params["k"]);
 	}, inits);
 	return vls[0].multiply(params["v0"]).add(vls[1]).exp();
 }
@@ -63,10 +73,11 @@ int main(){
 	std::unordered_map<std::string, double> params; //im not a huge fan of this but it works
 
 	params["lambda"]=100;
-	double rho=.9;
+	double rho=5;
 	params["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-	params["b"]=1-rho;
 	params["a"]=.4;
+	params["k"]=1+params["delta"]*params["lambda"]*muStable/params["a"];
+
 	params["sigma"]=.4;
 
 	params["t"]=1;
@@ -143,18 +154,21 @@ int main(){
 	std::unordered_map<std::string, double> params5; //im not a huge fan of this but it works
 
 	params5["lambda"]=100;
-	rho=.5;
-	params5["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-	params5["b"]=1-rho;
+	rho=2;
 	params5["a"]=.4;
+	params5["delta"]=rho/(muStable*params5["lambda"]); //they all have the same expected value
+	//params5["b"]=1-rho;
+	params5["k"]=1+params5["delta"]*params5["lambda"]*muStable/params5["a"];
+	//params5["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
+	//params5["b"]=1-rho;
+
 	params5["sigma"]=.4;
 
 	params5["t"]=1;
 	params5["numODE"]=params["numODE"];
 	params5["v0"]=1;
 
-	params5["delta"]=rho/(muStable*params5["lambda"]); //they all have the same expected value
-	params5["b"]=1-rho;
+
 	start = std::chrono::system_clock::now();
 	std::unordered_map<std::string, std::vector<double> > results5Stable=invert.computeDistribution(xmin, xmax,
 		[&](Complex &u, std::unordered_map<std::string, double> &parms){
@@ -224,17 +238,21 @@ int main(){
 
 	params0["lambda"]=100;
 	rho=0;
-	params0["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-	params0["b"]=1-rho;
+	//params0["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
+	//params0["b"]=1-rho;
+	params0["delta"]=rho/(muStable*params0["lambda"]); //they all have the same expected value
+	//params5["b"]=1-rho;
 	params0["a"]=.4;
+	params0["k"]=1+params0["delta"]*params0["lambda"]*muStable/params0["a"];
+
 	params0["sigma"]=.4;
 
 	params0["t"]=1;
 	params0["numODE"]=params["numODE"];
 	params0["v0"]=1;
 
-	params0["delta"]=rho/(muStable*params0["lambda"]); //they all have the same expected value
-	params0["b"]=1-rho;
+	//params0["delta"]=rho/(muStable*params0["lambda"]); //they all have the same expected value
+//	params0["b"]=1-rho;
 	start = std::chrono::system_clock::now();
 	std::unordered_map<std::string, std::vector<double> > results0Stable=invert.computeDistribution(xmin, xmax,
 		[&](Complex &u, std::unordered_map<std::string, double> &parms){
@@ -306,17 +324,19 @@ int main(){
 
 	paramsLDA["lambda"]=100;
 	rho=0;
-	paramsLDA["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-	paramsLDA["b"]=1-rho;
+	paramsLDA["delta"]=rho/(muStable*paramsLDA["lambda"]); //they all have the same expected value
+	//params5["b"]=1-rho;
 	paramsLDA["a"]=0;
+	paramsLDA["k"]=1;//+paramsLDA["delta"]*paramsLDA["lambda"]*muStable/paramsLDA["a"];
+
 	paramsLDA["sigma"]=0;
 
 	paramsLDA["t"]=1;
 	paramsLDA["numODE"]=params["numODE"];
 	paramsLDA["v0"]=1;
 
-	paramsLDA["delta"]=rho/(muStable*paramsLDA["lambda"]); //they all have the same expected value
-	paramsLDA["b"]=1-rho;
+//	paramsLDA["delta"]=rho/(muStable*paramsLDA["lambda"]); //they all have the same expected value
+	//paramsLDA["b"]=1-rho;
 	start = std::chrono::system_clock::now();
 	std::unordered_map<std::string, std::vector<double> > resultsLDAStable=invert.computeDistribution(xmin, xmax,
 		[&](Complex &u, std::unordered_map<std::string, double> &parms){

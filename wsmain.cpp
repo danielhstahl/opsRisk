@@ -51,13 +51,13 @@ Complex inverseGaussianCF(Complex &u, double mu, double lambda){
 	return exp((lambda/mu)*(1-sqrt(1-(2*mu*mu*u)/lambda)));
 }
 template<typename CF>
-std::vector<Complex> DuffieODE(Complex &u, CF &cf, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
+std::vector<Complex> DuffieODE(Complex &u, CF &cf, std::vector<Complex> &initialValues, double sigma, double lambda, double a, double delta, double k){ //double alpha, double mu, double beta, double c,
 	std::vector<Complex> vls(2);
 	double sig=sigma*sigma*.5;
 	Complex uBeta=u.add(initialValues[0].multiply(delta));
 
-	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(cf(uBeta).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a));
-	vls[1]=initialValues[0].multiply(b*a);
+	vls[0]=initialValues[0].multiply(initialValues[0]).multiply(sig).add(cf(uBeta).multiply(lambda)).subtract(lambda).subtract(initialValues[0].multiply(a*(1+k)));
+	vls[1]=initialValues[0].multiply(a);
 	return vls;
 }
 template<typename CF>
@@ -95,10 +95,10 @@ public:
 		double xmin;
 		double xmax;
 		params["lambda"]=100;
-		rho=.9;
+		rho=5;
 		params["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-		params["b"]=1-rho;
 		params["a"]=.4;
+		params["k"]=1+params["delta"]*params["lambda"]*muStable/params["a"];
 		params["sigma"]=.4;
 		params["t"]=1;
 		params["numODE"]=128;
@@ -146,7 +146,14 @@ public:
 			params["sigma"]=parms["sigma"].GetDouble();
 		}
 		params["delta"]=rho/(muStable*params["lambda"]); //they all have the same expected value
-		params["b"]=1-rho;
+		//params["a"]=.4;
+		if(params["a"]==0){
+			params["k"]=1;
+		}
+		else{
+			params["k"]=1+params["delta"]*params["lambda"]*muStable/params["a"];
+		}
+
 		xmax=params["lambda"]*(muStable+35*cStable);
 		FangOosterlee invert(uNum, xNum);
 		//auto WSsend=;
