@@ -31,6 +31,9 @@ std::vector<Complex> DuffieODE(const Complex& u, const CF& cf, const std::vector
 		initialValues[0]*b*a
 	};
 }
+Complex expAffine(const std::vector<Complex>& vals, double v0){
+	return exp(vals[0]*v0+vals[1]);
+}
 template<typename CF>
 Complex distToInvert(
 	const Complex& u, 
@@ -45,15 +48,16 @@ Complex distToInvert(
 	const CF &cf){
 	RungeKutta rg(t, numODE);
 	std::vector<Complex> inits={Complex(0, 0), Complex(0, 0)};
-	inits=rg.compute(
-		[&](double t, const std::vector<Complex>& x){
-			return DuffieODE(u, cf, x, sigma, lambda, a, delta, b);
-		},
-		std::move(inits)
+	return expAffine(
+		rg.compute(
+			[&](double t, const std::vector<Complex>& x){
+				return DuffieODE(u, cf, x, sigma, lambda, a, delta, b);
+			},
+			std::move(inits)
+		), 
+		v0
 	);
-	return exp(inits[0]*v0+inits[1]);
 }
-
 int main(){
 	int xNum=1024;//standard parameters
 	int uNum=256;//standard parameters
