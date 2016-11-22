@@ -47,7 +47,7 @@ Complex distToInvert(
 	double v0, 
 	const CF &cf){
 	RungeKutta rg(t, numODE);
-	std::vector<Complex> inits={Complex(0, 0), Complex(0, 0)};
+	std::vector<Complex> inits{Complex(0, 0), Complex(0, 0)};
 	return expAffine(
 		rg.compute(
 			[&](double t, const std::vector<Complex>& x){
