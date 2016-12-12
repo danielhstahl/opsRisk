@@ -1,29 +1,33 @@
 #define _USE_MATH_DEFINES
 #include <iostream>
-#include "Complex.h"
-#include "FangOosterlee.h"
+#include <complex>
+#include "FangOost.h"
 #include "RungeKutta.h"
 #include <cmath>
 #include <ctime>
 #include <chrono> //for accurate multithreading time using std::chrono
-#include "document.h" //rapidjson
+/*#include "document.h" //rapidjson
 #include "writer.h" //rapidjson
-#include "stringbuffer.h" //rapidjson 
-Complex GaussCF(const Complex& u, double mu, double sigma){
+#include "stringbuffer.h" //rapidjson */
+template<typename T>
+std::complex<T> GaussCF(const std::complex<T>& u, double mu, double sigma){
 	return exp(u*mu+u*u*sigma*sigma*.5);
 }
-Complex stableCF(const Complex& u, double alpha, double mu, double beta, double c){
+template<typename T>
+std::complex<T> stableCF(const std::complex<T>& u, double alpha, double mu, double beta, double c){
 	double phi=tan(alpha*.5*M_PI);
-	return exp(u*mu-(u*Complex(0, -1)*c).pow(alpha)*Complex(1, -beta*phi));
+	return exp(u*mu-pow(u*std::complex<T>(0, -1)*c, alpha)*std::complex<T>(1, -beta*phi));
 }
-Complex gammaCF(const Complex& u, double a, double b){
+template<typename T>
+std::complex<T> gammaCF(const std::complex<T>& u, double a, double b){
 	return pow(1-u*b, -a);
 }
-Complex inverseGaussianCF(const Complex& u, double mu, double lambda){
+template<typename T>
+std::complex<T> inverseGaussianCF(const std::complex<T>& u, double mu, double lambda){
 	return exp((lambda/mu)*(1-sqrt(1-(2*mu*mu*u)/lambda)));
 }
-template<typename CF>
-std::vector<Complex> DuffieODE(const Complex& u, const CF& cf, const std::vector<Complex>& initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
+template<typename CF, typename T>
+std::vector<std::complex<T>> DuffieODE(const std::complex<T>& u, const CF& cf, const std::vector<std::complex<T>>& initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
 	double sig=sigma*sigma*.5;
 	return 
 	{
@@ -31,12 +35,13 @@ std::vector<Complex> DuffieODE(const Complex& u, const CF& cf, const std::vector
 		initialValues[0]*b*a
 	};
 }
-Complex expAffine(const std::vector<Complex>& vals, double v0){
+template<typename T>
+std::complex<T> expAffine(const std::vector<std::complex<T>>& vals, double v0){
 	return exp(vals[0]*v0+vals[1]);
 }
-template<typename CF>
-Complex distToInvert(
-	const Complex& u, 
+template<typename CF, typename T>
+std::complex<T> distToInvert(
+	const std::complex<T>& u, 
 	double t, 
 	int numODE, 
 	double lambda, 
@@ -47,14 +52,12 @@ Complex distToInvert(
 	double v0, 
 	const CF &cf
 ){
-	RungeKutta rg(t, numODE);
-	std::vector<Complex> inits{Complex(0, 0), Complex(0, 0)};
+	//std::vector<std::complex<T>> inits=;
 	return expAffine(
-		rg.compute(
-			[&](double t, const std::vector<Complex>& x){
+		rungekutta::compute(t, numODE, std::vector<std::complex<T> >({std::complex<T>(0, 0), std::complex<T>(0, 0)})),
+			[&](double t, const std::vector<std::complex<T>>& x){
 				return DuffieODE(u, cf, x, sigma, lambda, a, delta, b);
-			},
-			inits
+			}
 		), 
 		v0
 	);
@@ -77,66 +80,15 @@ int main(){
 	double v0=1;
 	double xmin=0;
 	double xmax=lambda*(muStable+35*cStable);
-	std::vector<Complex> inits(2);
-	auto runParameters=[&](std::string& parameters){
-		rapidjson::Document parms;
-		parms.Parse(parameters.c_str());//yield data
-		parameters.clear();
-		if(parms.FindMember("xNum")!=parms.MemberEnd()){
-			xNum=parms["xNum"].GetInt();
-		}
-		if(parms.FindMember("uNum")!=parms.MemberEnd()){
-			uNum=parms["uNum"].GetInt();
-		}
-		if(parms.FindMember("numODE")!=parms.MemberEnd()){
-			numODE=parms["numODE"].GetInt();
-		}
-		if(parms.FindMember("muStable")!=parms.MemberEnd()){
-			muStable=parms["muStable"].GetDouble();
-		}
-		if(parms.FindMember("cStable")!=parms.MemberEnd()){
-			cStable=parms["cStable"].GetDouble();
-		}
-		if(parms.FindMember("alphaStable")!=parms.MemberEnd()){
-			alphaStable=parms["alphaStable"].GetDouble();
-		}
-		if(parms.FindMember("lambda")!=parms.MemberEnd()){
-			lambda=parms["lambda"].GetDouble();
-		}
-		if(parms.FindMember("rho")!=parms.MemberEnd()){
-			rho=parms["rho"].GetDouble();
-		}
-		if(parms.FindMember("v0")!=parms.MemberEnd()){
-			v0=parms["v0"].GetDouble();
-		}
-		if(parms.FindMember("t")!=parms.MemberEnd()){
-			t=parms["t"].GetDouble();
-		}
-		if(parms.FindMember("a")!=parms.MemberEnd()){
-			a=parms["a"].GetDouble();
-		}
-		if(parms.FindMember("sigma")!=parms.MemberEnd()){
-			sigma=parms["sigma"].GetDouble();
-		}
-		delta=rho/(muStable*lambda); //they all have the same expected value
-		b=1-rho;
-		xmax=lambda*(muStable+35*cStable);
-		FangOosterlee invert(uNum, xNum);
-		//auto start = std::chrono::system_clock::now();
-		invert.computeDistributionJSON(xmin, xmax,
-			[&](Complex &u){
-				return distToInvert(u, t, numODE, lambda, sigma, a, b, delta, v0,
-					[&](const Complex& uhat){
-						return stableCF(uhat, alphaStable, muStable, betaStable, cStable);
-					});
-				});
-	 };
-	 runParameters(std::string("{}"));
-	 /*while(true){
-			 std::string parameters;
-			 for (parameters; std::getline(std::cin, parameters);) {
-					 break;
-			 }
-			 runParameters(parameters);
-	 }*/
+	//std::vector<std::complex<double>> inits(2);
+	auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
+		return distToInvert(u, t, numODE, lambda, sigma, a, b, delta, v0,
+			[&](const auto& uhat){
+				return stableCF(uhat, alphaStable, muStable, betaStable, cStable);
+			});
+		});
+	auto axis=fangoost::computeXRange(xNum, xmin, xmax);
+	for(int i=0; i<xNum; ++i){
+		std::cout<<axis[i]<<", "<<density[i]<<std::endl;
+	}
 }
