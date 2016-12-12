@@ -4,3 +4,4 @@ opsRisk
 *.o
 opsRiskPaper
 *.exe
+.vscode
