@@ -3,6 +3,7 @@
 #include <complex>
 #include "FangOost.h"
 #include "RungeKutta.h"
+#include <fstream>
 #include <cmath>
 #include <ctime>
 #include <chrono> //for accurate multithreading time using std::chrono
@@ -26,8 +27,8 @@ template<typename T>
 std::complex<T> inverseGaussianCF(const std::complex<T>& u, double mu, double lambda){
 	return exp((lambda/mu)*(1-sqrt(1-(2*mu*mu*u)/lambda)));
 }
-template<typename CF, typename T>
-std::vector<std::complex<T>> DuffieODE(const std::complex<T>& u, const CF& cf, const std::vector<std::complex<T>>& initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
+template<typename T>
+std::vector<std::complex<T> > DuffieODE(const auto& u, auto&& cf, const std::vector<std::complex<T> >& initialValues, double sigma, double lambda, double a, double delta, double b){ //double alpha, double mu, double beta, double c,
 	double sig=sigma*sigma*.5;
 	return 
 	{
@@ -39,7 +40,7 @@ template<typename T>
 std::complex<T> expAffine(const std::vector<std::complex<T>>& vals, double v0){
 	return exp(vals[0]*v0+vals[1]);
 }
-template<typename CF, typename T>
+template<typename T>
 std::complex<T> distToInvert(
 	const std::complex<T>& u, 
 	double t, 
@@ -50,15 +51,19 @@ std::complex<T> distToInvert(
 	double b, 
 	double delta,
 	double v0, 
-	const CF &cf
+	auto&& cf
 ){
-	//std::vector<std::complex<T>> inits=;
 	return expAffine(
-		rungekutta::compute(t, numODE, std::vector<std::complex<T> >({std::complex<T>(0, 0), std::complex<T>(0, 0)})),
+		/*rungekutta::compute(t, numODE, std::vector<std::complex<T> >({std::complex<T>(0, 0), std::complex<T>(0, 0)}),
 			[&](double t, const std::vector<std::complex<T>>& x){
 				return DuffieODE(u, cf, x, sigma, lambda, a, delta, b);
 			}
-		), 
+		), */
+		rungekutta::computeFunctional(t, numODE, std::vector<std::complex<T> >({std::complex<T>(0, 0), std::complex<T>(0, 0)}),
+			[&](double t, const std::vector<std::complex<T>>& x){
+				return DuffieODE(u, cf, x, sigma, lambda, a, delta, b);
+			}
+		),
 		v0
 	);
 }
@@ -82,13 +87,15 @@ int main(){
 	double xmax=lambda*(muStable+35*cStable);
 	//std::vector<std::complex<double>> inits(2);
 	auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
-		return distToInvert(u, t, numODE, lambda, sigma, a, b, delta, v0,
-			[&](const auto& uhat){
-				return stableCF(uhat, alphaStable, muStable, betaStable, cStable);
-			});
+		return distToInvert(u, t, numODE, lambda, sigma, a, b, delta, v0, [&](const auto& uhat){
+			return stableCF(uhat, alphaStable, muStable, betaStable, cStable);
 		});
+	});
 	auto axis=fangoost::computeXRange(xNum, xmin, xmax);
+
+	std::ofstream out("output.csv");
 	for(int i=0; i<xNum; ++i){
-		std::cout<<axis[i]<<", "<<density[i]<<std::endl;
+		out<<axis[i]<<", "<<density[i]<<std::endl;
 	}
+	out.close();
 }
