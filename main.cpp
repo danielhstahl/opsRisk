@@ -45,13 +45,13 @@ std::complex<T> distToInvert(
 	const std::complex<T>& u, 
 	double t, 
 	int numODE, 
-	double lambda, 
-	double sigma, 
-	double a, 
-	double b, 
-	double delta,
-	double v0, 
-	auto&& cf
+	double lambda, //jump
+	double sigma,  //volatility of process
+	double a, //speed of mean reversion
+	double b, //mean
+	double delta, //"correlation"
+	double v0, //initial value
+	auto&& cf //jump CF
 ){
 	return expAffine(
 		/*rungekutta::compute(t, numODE, std::vector<std::complex<T> >({std::complex<T>(0, 0), std::complex<T>(0, 0)}),
@@ -81,7 +81,7 @@ int main(){
 	double a=.4;
 	double sigma=.4;
 	double t=1;
-	int numODE=128;
+	int numODE=128; 
 	double v0=1;
 	double xmin=0;
 	double xmax=lambda*(muStable+35*cStable);
