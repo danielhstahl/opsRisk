@@ -1,5 +1,5 @@
 #LDFLAGS=-L ../Complex -lComplex
-INCLUDES=-I ../RungeKutta -I ../FangOost -I../rapidjson/include/rapidjson/ -I../websocketpp/ -I../asio/asio/include/ -I ../FunctionalUtilities
+INCLUDES=-I ../RungeKutta -I ../FangOost -I ../FunctionalUtilities -I ../CharacteristicFunctions
 opsRisk: main.o
 	g++ -std=c++14 -O3  -pthread main.o  $(LDFLAGS) $(INCLUDES) -o opsRisk -fopenmp
 main.o: main.cpp
