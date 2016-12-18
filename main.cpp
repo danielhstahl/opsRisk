@@ -27,9 +27,31 @@ int main(){
 	double xmin=0;
 	double xmax=lambda*(muStable+35*cStable);
 	auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
-		return chfunctions::jumpProcess(u, t, numODE, lambda, sigma, a, b, delta, v0, [&](const auto& uhat){
+		/*return chfunctions::jumpProcess(u, t, numODE, lambda, sigma, a, b, delta, v0, [&](const auto& uhat){
 			return chfunctions::stableCF(uhat, alphaStable, muStable, betaStable, cStable);
-		});
+		});*/
+		return chfunctions::expAffine(
+            rungekutta::computeFunctional(t, numODE, std::vector<std::complex<double> >({0, 0}),
+                [&](double t, const std::vector<std::complex<double> >& x){
+                    return chfunctions::duffieODE(
+                        u+delta*x[0],//u
+                        x, //current values
+                        0.0, //rho0
+                        0.0, //rho1
+                        -a*b, //K0
+                        -a, //K1,
+                        0.0, //H0
+                        sigma*sigma, //H1, 
+                        0.0,//l0
+                        lambda, //l1
+                        [&](const auto& uhat){
+							return chfunctions::stableCF(uhat, alphaStable, muStable, betaStable, cStable);
+						}
+                    );
+                }
+            ),
+            v0
+        );
 	});
 	auto axis=fangoost::computeXRange(xNum, xmin, xmax);
 	std::ofstream out("output.csv");
