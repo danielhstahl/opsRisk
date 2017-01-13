@@ -16,7 +16,7 @@ void printJson(const Container& myContainer, const Range& mn, const Range& dx){
 	for(const auto& val:myContainer){
 		std::cout<<val<<",";
 	}
-	std::cout<<"],\"xmin\":"<<mn<<",\"dx\":"<<dx<<"}"<<std::endl;
+	std::cout<<"],\"xmin\":"<<mn<<",\"dx\":"<<dx<<"}";
 }
 auto computeXMax(double lambda, double muStable, double cStable){
 	const double largeScale=35;//
