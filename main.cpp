@@ -12,11 +12,11 @@
 
 template<typename Container, typename Range>
 void printJson(const Container& myContainer, const Range& mn, const Range& dx){
-	std::cout<<"{y:[";
+	std::cout<<"{\"y\":[";
 	for(const auto& val:myContainer){
 		std::cout<<val<<",";
 	}
-	std::cout<<"],xmin:"<<mn<<",dx:"<<dx<<"}\\n";
+	std::cout<<"],\"xmin\":"<<mn<<",\"dx\":"<<dx<<"}"<<std::endl;
 }
 auto computeXMax(double lambda, double muStable, double cStable){
 	const double largeScale=35;//
