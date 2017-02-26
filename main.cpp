@@ -88,8 +88,24 @@ int main(int argc, char* argv[]){
 	const double xmax=computeXMax(lambda, muStable, cStable);
 	const double delta=computeDelta(rho, muStable, lambda); //they all have the same expected value
 	const double b=computeB(rho);
-
+	auto beta=chfunctions::AlphaOrBeta(0.0, -a, sigma*sigma, lambda);
+    auto alpha=chfunctions::AlphaOrBeta(0.0, a*b, 0.0, 0.0);
+	auto cf=chfunctions::augCF(alphaStable, muStable, betaStable, cStable);
 	const auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
+		return chfunctions::expAffine(
+            rungekutta::computeFunctional(t, numODE, std::vector<std::complex<double> >({0, 0}),
+                [&](double t, const std::vector<std::complex<double> >& x){
+					auto cfPart=cf(u+delta*x[0]);
+					return std::vector<std::complex<double> >({
+						beta(x[0], cfPart),
+						alpha(x[0], cfPart)
+					});
+                }
+            ),
+            v0
+        );
+	});
+	/*const auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
 		return chfunctions::expAffine(
             rungekutta::computeFunctional(t, numODE, std::vector<std::complex<double> >({0, 0}),
                 [&](double t, const std::vector<std::complex<double> >& x){
@@ -112,7 +128,8 @@ int main(int argc, char* argv[]){
             ),
             v0
         );
-	});
+	});*/
+
 
 	printJson(density, xmin, fangoost::computeDX(xNum, xmin, xmax));
 
