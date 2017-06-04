@@ -20,9 +20,9 @@ void printJson(const Container& myContainer, const Range& mn, const Range& dx){
 	std::cout<<myContainer[n-1];
 	std::cout<<"],\"xmin\":"<<mn<<",\"dx\":"<<dx<<"}";
 }
-auto computeXMax(double lambda, double muStable, double cStable){
+auto computeXMax(double lambda, double muStable, double cStable, double t){
 	const double largeScale=35;//
-	return lambda*(muStable+largeScale*cStable);
+	return lambda*(muStable+largeScale*cStable)*t;
 }
 auto computeDelta(double rho, double muStable, double lambda){
 	return rho/(muStable*lambda);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]){
 			sigma=parms["sigma"].GetDouble();
 		}		
 	}
-	const double xmax=computeXMax(lambda, muStable, cStable);
+	const double xmax=computeXMax(lambda, muStable, cStable, t);
 	const double delta=computeDelta(rho, muStable, lambda); //they all have the same expected value
 	const double b=computeB(rho);
 	auto beta=chfunctions::AlphaOrBeta(0.0, -a, sigma*sigma, lambda);
@@ -105,31 +105,6 @@ int main(int argc, char* argv[]){
             v0
         );
 	});
-	/*const auto density=fangoost::computeInv(xNum, uNum, xmin, xmax, [&](const auto& u){
-		return chfunctions::expAffine(
-            rungekutta::computeFunctional(t, numODE, std::vector<std::complex<double> >({0, 0}),
-                [&](double t, const std::vector<std::complex<double> >& x){
-                    return chfunctions::duffieODE(
-                        u+delta*x[0],//u
-                        x, //current values
-                        0.0, //rho0
-                        0.0, //rho1
-                        a*b, //K0
-                        -a, //K1,
-                        0.0, //H0
-                        sigma*sigma, //H1, 
-                        0.0,//l0
-                        lambda, //l1
-                        [&](const auto& uhat){
-							return chfunctions::stableCF(uhat, alphaStable, muStable, betaStable, cStable);
-						}
-                    );
-                }
-            ),
-            v0
-        );
-	});*/
-
 
 	printJson(density, xmin, fangoost::computeDX(xNum, xmin, xmax));
 
